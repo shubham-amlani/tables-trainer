@@ -1,525 +1,1168 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Multiplication Tables Trainer</title>
-  <style>
-    :root{
-      --bg: #f3f4f6;
-      --card: #ffffff;
-      --muted: #6b7280;
-      --text: #111827;
-      --accent: #111827;
-      --pill-border: #d1d5db;
-      --success: #15803d;
-      --danger: #b91c1c;
-      --glass: rgba(17,24,39,0.04);
-    }
-
-    *{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-
-    html,body{height:100%}
-    body{
-      margin:0;
-      padding:0;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:var(--bg);
-      color:var(--text);
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      padding:20px;
-    }
-
-    .app{
-      width:100%;
-      max-width:900px;
-      background:var(--card);
-      border-radius:14px;
-      padding:20px;
-      box-shadow:0 18px 35px rgba(15,23,42,0.08);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-
-    h1{
-      margin:0;
-      font-size:clamp(18px,2.6vw,24px);
-      letter-spacing:0.02em;
-    }
-
-    .subtitle{
-      font-size:13px;
-      color:var(--muted);
-      margin:0;
-      text-align:right;
-    }
-
-    /* Controls area */
-    .controls{
-      display:flex;
-      gap:12px;
-      align-items:flex-start;
-      justify-content:space-between;
-      flex-wrap:wrap;
-    }
-
-    .left-controls{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      min-width:160px;
-      max-width:66%;
-    }
-
-    .tiny{font-size:12px;color:var(--muted)}
-
-    .tables-select{
-      display:grid;
-      grid-template-columns:repeat(8,auto);
-      gap:6px;
-      align-items:center;
-    }
-
-    .table-pill{
-      font-size:12px;
-      padding:6px 8px;
-      border-radius:999px;
-      border:1px solid var(--pill-border);
-      cursor:pointer;
-      user-select:none;
-      background:transparent;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-width:42px;
-      text-align:center;
-    }
-
-    .table-pill.active{
-      background:var(--accent);
-      color:#fff;
-      border-color:var(--accent);
-    }
-
-    .buttons-group{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      justify-content:flex-end;
-      flex-wrap:wrap;
-      min-width:160px;
-    }
-
-    button{
-      border:0;
-      border-radius:999px;
-      padding:8px 12px;
-      font-size:13px;
-      cursor:pointer;
-      background:var(--accent);
-      color:white;
-      min-height:40px;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-    }
-
-    button.secondary{
-      background:#e5e7eb;
-      color:var(--text);
-    }
-
-    button.danger{
-      background:#fecaca;
-      color:#7f1d1d;
-    }
-
-    button:disabled{opacity:0.5;cursor:default}
-
-    /* Question card */
-    .question-card{
-      margin-top:6px;
-      padding:20px;
-      border-radius:12px;
-      border:1px solid #e5e7eb;
-      background:linear-gradient(180deg,var(--card),var(--glass));
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      align-items:center;
-    }
-
-    .question{
-      font-weight:700;
-      font-size:clamp(28px,8vw,48px); /* responsive big number */
-      margin:0;
-      letter-spacing:0.02em;
-    }
-
-    .input-row{
-      width:100%;
-      display:flex;
-      gap:8px;
-      align-items:center;
-      justify-content:center;
-      flex-wrap:wrap;
-    }
-
-    input[type="number"]{
-      font-size:20px;
-      padding:10px 12px;
-      width:180px;
-      text-align:center;
-      border-radius:10px;
-      border:1px solid var(--pill-border);
-      outline:none;
-    }
-
-    input[type="number"]:focus{
-      box-shadow:0 0 0 3px rgba(34,197,94,0.06);
-      border-color:rgba(17,24,39,0.6);
-    }
-
-    .feedback{min-height:20px;font-size:14px;text-align:center}
-
-    .feedback.correct{color:var(--success)}
-    .feedback.wrong{color:var(--danger)}
-
-    .timing{font-size:13px;color:var(--muted);text-align:center}
-
-    .stats{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:center;
-      width:100%;
-    }
-
-    .stat-chip{
-      background:#f8fafc;
-      border-radius:999px;
-      padding:6px 10px;
-      font-size:13px;
-      color:#374151;
-    }
-
-    .warning{color:#b45309;font-size:12px;margin-top:4px;text-align:left}
-
-    /* Responsive adjustments */
-    @media (max-width:820px){
-      .tables-select{grid-template-columns:repeat(6,auto)}
-      .left-controls{max-width:100%}
-      .buttons-group{min-width:120px;justify-content:flex-start}
-    }
-
-    @media (max-width:560px){
-      .controls{flex-direction:column;align-items:stretch}
-      .tables-select{grid-template-columns:repeat(5,auto)}
-      .table-pill{min-width:36px;padding:6px}
-      .buttons-group{flex-direction:row;gap:6px;justify-content:space-between}
-      input[type="number"]{width:140px}
-      .question{font-size:clamp(22px,12vw,36px)}
-      button{flex:1 1 auto;min-height:44px;padding:10px}
-    }
-
-    @media (max-width:380px){
-      .tables-select{grid-template-columns:repeat(4,auto)}
-      input[type="number"]{width:120px}
-      .question{font-size:clamp(20px,14vw,32px)}
-    }
-  </style>
-</head>
-<body>
-<div class="app" role="main" aria-label="Tables Trainer">
-  <header>
-    <h1>Tables Trainer</h1>
-    <p class="subtitle">Select tables (1–20). Multipliers are limited to <strong>1–10</strong>. Answer and press Enter or OK.</p>
-  </header>
-
-  <div class="controls" aria-hidden="false">
-    <div class="left-controls">
-      <div class="tiny">Select tables (1–20):</div>
-      <div class="tables-select" id="tablesSelect" aria-label="Tables selection"></div>
-      <div class="warning" id="tablesWarning" style="display:none">Select at least one table to start.</div>
-    </div>
-
-    <div class="buttons-group" role="toolbar" aria-label="Actions">
-      <button id="nextBtn" aria-label="Start or show next question">Start / Next</button>
-      <button id="downloadBtn" class="secondary" type="button" aria-label="Download performance log">Download log</button>
-      <button id="resetBtn" class="danger" type="button" aria-label="Reset statistics">Reset stats</button>
-    </div>
-  </div>
-
-  <div class="question-card" aria-live="polite">
-    <div class="question" id="questionDisplay">– × –</div>
-
-    <div class="input-row">
-      <input type="number" id="answerInput" placeholder="Answer" autocomplete="off" inputmode="numeric" aria-label="Answer input" />
-      <button id="submitBtn" type="button" aria-label="Submit answer">OK</button>
-    </div>
-
-    <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
-    <div class="timing" id="timingInfo" aria-hidden="true"></div>
-
-    <div class="stats" aria-hidden="false">
-      <div class="stat-chip" id="totalStat">Total: 0</div>
-      <div class="stat-chip" id="accuracyStat">Accuracy: –</div>
-      <div class="stat-chip" id="avgTimeStat">Avg time: –</div>
-      <div class="stat-chip" id="focusStat">Focus: slow/wrong ones</div>
-    </div>
-  </div>
-</div>
-
-<script>
-  // unchanged logic except multiplier limited 1..10 and small defaults
-  const STORAGE_KEY_STATS = "tablesTrainerStatsV1";
-  const STORAGE_KEY_SETTINGS = "tablesTrainerSettingsV1";
-
-  let stats = {};
-  let currentQuestion = null;
-  let questionStartTime = null;
-
-  const tablesSelectEl = document.getElementById("tablesSelect");
-  const tablesWarningEl = document.getElementById("tablesWarning");
-  const questionDisplayEl = document.getElementById("questionDisplay");
-  const answerInputEl = document.getElementById("answerInput");
-  const feedbackEl = document.getElementById("feedback");
-  const timingInfoEl = document.getElementById("timingInfo");
-  const totalStatEl = document.getElementById("totalStat");
-  const accuracyStatEl = document.getElementById("accuracyStat");
-  const avgTimeStatEl = document.getElementById("avgTimeStat");
-
-  const nextBtn = document.getElementById("nextBtn");
-  const submitBtn = document.getElementById("submitBtn");
-  const resetBtn = document.getElementById("resetBtn");
-  const downloadBtn = document.getElementById("downloadBtn");
-
-  function init(){
-    loadStats();
-    buildTableSelector();
-    updateStatsDisplay();
-    wireEvents();
-  }
-
-  function loadStats(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY_STATS);
-      if(raw) stats = JSON.parse(raw);
-    }catch(e){ stats = {} }
-  }
-
-  function saveStats(){
-    localStorage.setItem(STORAGE_KEY_STATS, JSON.stringify(stats));
-  }
-
-  function loadSettings(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
-      if(raw) return JSON.parse(raw);
-    }catch(e){}
-    return { selectedTables: [10,11,12,13,14,15] };
-  }
-
-  function saveSettings(settings){
-    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
-  }
-
-  function buildTableSelector(){
-    const settings = loadSettings();
-    const selected = new Set(settings.selectedTables || []);
-    tablesSelectEl.innerHTML = "";
-    for(let n=1;n<=20;n++){
-      const label = document.createElement("label");
-      label.className = "table-pill";
-      if(selected.has(n)) label.classList.add("active");
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.value = n;
-      checkbox.checked = selected.has(n);
-      checkbox.addEventListener("change", () => {
-        label.classList.toggle("active", checkbox.checked);
-        saveCurrentTableSelection();
-      });
-      label.appendChild(checkbox);
-      label.appendChild(document.createTextNode("× " + n));
-      tablesSelectEl.appendChild(label);
-    }
-  }
-
-  function getSelectedTables(){
-    const pills = tablesSelectEl.querySelectorAll("label.table-pill input");
-    const list = [];
-    pills.forEach((input) => {
-      if(input.checked) list.push(parseInt(input.value,10));
-    });
-    return list;
-  }
-
-  function saveCurrentTableSelection(){
-    const selectedTables = getSelectedTables();
-    saveSettings({ selectedTables });
-  }
-
-  // pickNextQuestion: selected table x multiplier(1..10). weighting uses stats.
-  function pickNextQuestion(){
-    const selectedTables = getSelectedTables();
-    if(!selectedTables.length){
-      tablesWarningEl.style.display = "block";
-      return null;
-    } else {
-      tablesWarningEl.style.display = "none";
-    }
-
-    const candidates = [];
-    selectedTables.forEach((base) => {
-      for(let m=1;m<=10;m++){ // <-- multiplier limited to 1..10
-        const a = base, b = m;
-        const key = `${a} x ${b}`;
-        const s = stats[key];
-        let weight;
-        if(!s || s.attempts === 0){
-          weight = 8;
-        } else {
-          const wrong = s.attempts - s.correct;
-          const avgTime = s.totalTime / s.attempts;
-          weight = 1 + wrong * 3 + Math.min(avgTime, 6);
-        }
-        candidates.push({a,b,key,weight});
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Multiplication Tables Trainer — Enhanced</title>
+    <style>
+      :root {
+        --bg: #0f1724;
+        --panel: #0b1220;
+        --card: #0f1724;
+        --surface: #0f1724;
+        --muted: #94a3b8;
+        --text: #e6eef8;
+        --accent: #2563eb;
+        --pill-border: #1f2a3a;
+        --success: #16a34a;
+        --danger: #ef4444;
+        --glass: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0.01)
+        );
+        --glass-2: rgba(255, 255, 255, 0.02);
+        --card-2: #07101a;
       }
-    });
 
-    const totalWeight = candidates.reduce((acc,c)=>acc+c.weight,0);
-    let r = Math.random() * totalWeight;
-    for(const c of candidates){
-      if(r < c.weight) return {a:c.a,b:c.b,key:c.key};
-      r -= c.weight;
-    }
-    return candidates[candidates.length-1];
-  }
+      * {
+        box-sizing: border-box;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+          Roboto, "Helvetica Neue", Arial;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        padding: 20px;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, #071028 0%, #071428 60%);
+        color: var(--text);
+      }
 
-  function showNewQuestion(){
-    const q = pickNextQuestion();
-    if(!q) return;
-    currentQuestion = q;
-    questionDisplayEl.textContent = `${q.a} × ${q.b} = ?`;
-    feedbackEl.textContent = "";
-    feedbackEl.className = "feedback";
-    timingInfoEl.textContent = "";
-    answerInputEl.value = "";
-    answerInputEl.focus();
-    questionStartTime = performance.now();
-  }
+      .app {
+        width: 100%;
+        max-width: 980px;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.03),
+          rgba(255, 255, 255, 0.02)
+        );
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 12px 30px rgba(2, 6, 23, 0.6);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
 
-  function submitAnswer(){
-    if(!currentQuestion || questionStartTime === null){
-      showNewQuestion();
-      return;
-    }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(18px, 2.6vw, 26px);
+        letter-spacing: 0.02em;
+      }
+      .subtitle {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0;
+        text-align: right;
+      }
 
-    const userVal = parseInt(answerInputEl.value,10);
-    if(isNaN(userVal)){
-      feedbackEl.textContent = "Type your answer and press OK or Enter.";
-      feedbackEl.className = "feedback wrong";
-      return;
-    }
+      .controls {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+      .left-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 160px;
+        max-width: 66%;
+      }
+      .tiny {
+        font-size: 12px;
+        color: var(--muted);
+      }
 
-    const endTime = performance.now();
-    const timeTaken = (endTime - questionStartTime)/1000;
-    questionStartTime = null;
+      .mode-tabs {
+        display: flex;
+        gap: 8px;
+      }
+      .mode-btn {
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--pill-border);
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+        transition: all 0.16s ease;
+        font-weight: 600;
+      }
+      .mode-btn:hover {
+        transform: translateY(-2px);
+      }
+      .mode-btn.active {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.18);
+      }
 
-    const {a,b,key} = currentQuestion;
-    const correctAnswer = a*b;
-    const isCorrect = userVal === correctAnswer;
+      .tables-select {
+        display: grid;
+        grid-template-columns: repeat(8, auto);
+        gap: 6px;
+        align-items: center;
+      }
+      .table-pill {
+        font-size: 13px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--pill-border);
+        cursor: pointer;
+        user-select: none;
+        background: transparent;
+        color: var(--text);
+        min-width: 46px;
+        text-align: center;
+        transition: all 0.12s ease;
+      }
+      .table-pill:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 18px rgba(2, 6, 23, 0.35);
+      }
+      .table-pill.active {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.14);
+      }
 
-    if(!stats[key]) stats[key] = {a,b,attempts:0,correct:0,totalTime:0,lastTime:0,lastCorrect:false,history:[]};
-    const s = stats[key];
-    s.attempts += 1;
-    if(isCorrect) s.correct += 1;
-    s.totalTime += timeTaken;
-    s.lastTime = timeTaken;
-    s.lastCorrect = isCorrect;
-    s.history.push({timestamp:new Date().toISOString(),userAnswer:userVal,correctAnswer,time:timeTaken});
+      .buttons-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        min-width: 160px;
+      }
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font-size: 13px;
+        cursor: pointer;
+        background: var(--accent);
+        color: white;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.12s ease;
+      }
+      button.secondary {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--pill-border);
+      }
+      button.danger {
+        background: transparent;
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.12);
+      }
+      button:active {
+        transform: translateY(1px);
+      }
 
-    saveStats();
-    updateStatsDisplay();
+      .question-card {
+        margin-top: 6px;
+        padding: 18px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.02);
+        background: var(--card-2);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+      .question {
+        font-weight: 800;
+        font-size: clamp(28px, 8vw, 56px);
+        margin: 0;
+        letter-spacing: 0.02em;
+        color: linear-gradient(90deg, #fff, #dbeafe);
+      }
 
-    if(isCorrect){
-      feedbackEl.textContent = "Correct ✅";
-      feedbackEl.className = "feedback correct";
-    } else {
-      feedbackEl.textContent = `Wrong ❌  Correct answer is ${correctAnswer}`;
-      feedbackEl.className = "feedback wrong";
-    }
+      .input-row {
+        width: 100%;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      input[type="number"] {
+        font-size: 22px;
+        padding: 12px 14px;
+        width: 220px;
+        text-align: center;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        outline: none;
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text);
+        box-shadow: inset 0 -2px 8px rgba(0, 0, 0, 0.35);
+      }
+      input[type="number"]::placeholder {
+        color: rgba(255, 255, 255, 0.35);
+      }
+      input[type="number"]:focus {
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
+        border-color: rgba(37, 99, 235, 0.22);
+      }
 
-    timingInfoEl.textContent = `Time: ${timeTaken.toFixed(2)} s`;
-    setTimeout(showNewQuestion,700);
-  }
+      .feedback {
+        min-height: 22px;
+        font-size: 15px;
+        text-align: center;
+        font-weight: 600;
+      }
+      .feedback.correct {
+        color: var(--success);
+        text-shadow: 0 6px 20px rgba(34, 197, 94, 0.06);
+      }
+      .feedback.wrong {
+        color: var(--danger);
+        text-shadow: 0 6px 20px rgba(239, 68, 68, 0.06);
+      }
 
-  function updateStatsDisplay(){
-    const all = Object.values(stats);
-    const totalAttempts = all.reduce((acc,s)=>acc+s.attempts,0);
-    const totalCorrect = all.reduce((acc,s)=>acc+s.correct,0);
-    const totalTime = all.reduce((acc,s)=>acc+s.totalTime,0);
+      .timing {
+        font-size: 13px;
+        color: var(--muted);
+        text-align: center;
+      }
+      .stats {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+      }
+      .stat-chip {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 13px;
+        color: var(--muted);
+        border: 1px solid rgba(255, 255, 255, 0.02);
+      }
 
-    totalStatEl.textContent = `Total: ${totalAttempts}`;
-    if(totalAttempts===0){
-      accuracyStatEl.textContent = "Accuracy: –";
-      avgTimeStatEl.textContent = "Avg time: –";
-    } else {
-      const acc = (100*totalCorrect)/totalAttempts;
-      const avgT = totalTime/totalAttempts;
-      accuracyStatEl.textContent = `Accuracy: ${acc.toFixed(1)}%`;
-      avgTimeStatEl.textContent = `Avg time: ${avgT.toFixed(2)} s`;
-    }
-  }
+      .section {
+        margin-top: 8px;
+        padding: 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.02);
+      }
+      .small-grid {
+        display: grid;
+        grid-template-columns: repeat(10, auto);
+        gap: 6px;
+      }
+      .note {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
 
-  function resetStats(){
-    if(!confirm("Reset all stats and start fresh?")) return;
-    stats = {};
-    saveStats();
-    updateStatsDisplay();
-  }
+      /* subtle flash for correct/wrong */
+      .flash-correct {
+        animation: flashCorrect 0.7s ease;
+      }
+      .flash-wrong {
+        animation: flashWrong 0.7s ease;
+      }
+      @keyframes flashCorrect {
+        0% {
+          box-shadow: 0 0 0 rgba(16, 185, 129, 0);
+        }
+        20% {
+          box-shadow: 0 12px 40px rgba(16, 185, 129, 0.12);
+        }
+        100% {
+          box-shadow: 0 0 0 rgba(16, 185, 129, 0);
+        }
+      }
+      @keyframes flashWrong {
+        0% {
+          box-shadow: 0 0 0 rgba(239, 68, 68, 0);
+        }
+        20% {
+          box-shadow: 0 12px 40px rgba(239, 68, 68, 0.12);
+        }
+        100% {
+          box-shadow: 0 0 0 rgba(239, 68, 68, 0);
+        }
+      }
 
-  function downloadLog(){
-    const all = Object.values(stats);
-    if(!all.length){ alert("No stats yet to export."); return;}
-    let lines = [];
-    lines.push("a,b,question,attempts,correct,totalTime,avgTime,lastTime,lastCorrect");
-    all.forEach((s)=>{
-      const avgTime = s.attempts ? s.totalTime/s.attempts : 0;
-      lines.push([s.a,s.b,`"${s.a} x ${s.b}"`,s.attempts,s.correct,s.totalTime.toFixed(3),avgTime.toFixed(3),s.lastTime.toFixed(3),s.lastCorrect ? "true":"false"].join(","));
-    });
-    const blob = new Blob([lines.join("\n")],{type:"text/plain"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "tables-trainer-log.txt";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
+      @media (max-width: 820px) {
+        .tables-select {
+          grid-template-columns: repeat(6, auto);
+        }
+        .left-controls {
+          max-width: 100%;
+        }
+        .buttons-group {
+          min-width: 120px;
+          justify-content: flex-start;
+        }
+      }
+      @media (max-width: 560px) {
+        .controls {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .tables-select {
+          grid-template-columns: repeat(5, auto);
+        }
+        .table-pill {
+          min-width: 36px;
+          padding: 6px;
+        }
+        .buttons-group {
+          flex-direction: row;
+          gap: 6px;
+          justify-content: space-between;
+        }
+        input[type="number"] {
+          width: 160px;
+        }
+        .question {
+          font-size: clamp(22px, 12vw, 44px);
+        }
+        button {
+          flex: 1 1 auto;
+          min-height: 44px;
+          padding: 10px;
+        }
+      }
+      @media (max-width: 380px) {
+        .tables-select {
+          grid-template-columns: repeat(4, auto);
+        }
+        input[type="number"] {
+          width: 120px;
+        }
+        .question {
+          font-size: clamp(20px, 14vw, 34px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app" role="main" aria-label="Tables Trainer Enhanced">
+      <header>
+        <h1>Tables Trainer — Enhanced</h1>
+        <p class="subtitle">
+          Practice Tables (×1–10), Squares (1–30) and Cubes (1–20). Visual +
+          sound feedback included.
+        </p>
+      </header>
 
-  function wireEvents(){
-    nextBtn.addEventListener("click",showNewQuestion);
-    submitBtn.addEventListener("click",submitAnswer);
-    resetBtn.addEventListener("click",resetStats);
-    downloadBtn.addEventListener("click",downloadLog);
-    answerInputEl.addEventListener("keydown",(e)=>{ if(e.key==="Enter") submitAnswer();});
-  }
+      <div class="controls">
+        <div class="left-controls">
+          <div class="mode-tabs" role="tablist" aria-label="Practice modes">
+            <button
+              class="mode-btn active"
+              id="modeTablesBtn"
+              data-mode="tables"
+            >
+              Tables
+            </button>
+            <button class="mode-btn" id="modeSquaresBtn" data-mode="squares">
+              Squares
+            </button>
+            <button class="mode-btn" id="modeCubesBtn" data-mode="cubes">
+              Cubes
+            </button>
+          </div>
 
-  init();
-</script>
-</body>
+          <div class="section" id="tablesSection">
+            <div class="tiny">Select tables (1–20):</div>
+            <div class="tables-select" id="tablesSelect"></div>
+          </div>
+
+          <div class="section" id="squaresSection" style="display: none">
+            <div class="tiny">Select squares (1–30):</div>
+            <div class="small-grid" id="squaresSelect"></div>
+          </div>
+
+          <div class="section" id="cubesSection" style="display: none">
+            <div class="tiny">Select cubes (1–20):</div>
+            <div class="small-grid" id="cubesSelect"></div>
+          </div>
+
+          <div class="note">
+            Tip: For tables the second factor is limited to
+            <strong>1–10</strong>. The app focuses on slower / wrong facts
+            automatically.
+          </div>
+        </div>
+
+        <div class="buttons-group" role="toolbar" aria-label="Actions">
+          <button id="nextBtn">Start / Next</button>
+          <button id="pauseBtn" class="secondary" type="button">Pause</button>
+          <button id="skipBtn" class="secondary" type="button">Skip</button>
+          <button id="downloadBtn" class="secondary" type="button">
+            Download log
+          </button>
+          <button id="resetBtn" class="danger" type="button">
+            Reset stats
+          </button>
+        </div>
+      </div>
+
+      <div class="question-card" id="questionCard" aria-live="polite">
+        <div class="question" id="questionDisplay">– × –</div>
+
+        <div class="input-row">
+          <input
+            type="number"
+            id="answerInput"
+            placeholder="Type answer & press Enter"
+            autocomplete="off"
+            inputmode="numeric"
+            aria-label="Answer input"
+          />
+        </div>
+
+        <div
+          class="feedback"
+          id="feedback"
+          role="status"
+          aria-live="polite"
+        ></div>
+        <div class="timing" id="timingInfo" aria-hidden="true"></div>
+
+        <div class="stats">
+          <div class="stat-chip" id="totalStat">Total: 0</div>
+          <div class="stat-chip" id="accuracyStat">Accuracy: –</div>
+          <div class="stat-chip" id="avgTimeStat">Avg time: –</div>
+          <div class="stat-chip" id="focusStat">Focus: slow/wrong ones</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- CONFIG / STORAGE KEYS ---
+      const STORAGE_KEY_STATS = "tablesTrainerStatsV2";
+      const STORAGE_KEY_SETTINGS = "tablesTrainerSettingsV2";
+
+      let stats = {};
+      let currentQuestion = null;
+      let questionStartTime = null;
+      let audioCtx = null;
+      let isPaused = false;
+      let pausedElapsed = 0; // seconds accumulated when paused
+
+      // UI elements
+      const tablesSelectEl = document.getElementById("tablesSelect");
+      const squaresSelectEl = document.getElementById("squaresSelect");
+      const cubesSelectEl = document.getElementById("cubesSelect");
+      const questionDisplayEl = document.getElementById("questionDisplay");
+      const answerInputEl = document.getElementById("answerInput");
+      const feedbackEl = document.getElementById("feedback");
+      const timingInfoEl = document.getElementById("timingInfo");
+      const totalStatEl = document.getElementById("totalStat");
+      const accuracyStatEl = document.getElementById("accuracyStat");
+      const avgTimeStatEl = document.getElementById("avgTimeStat");
+      const nextBtn = document.getElementById("nextBtn");
+      const pauseBtn = document.getElementById("pauseBtn");
+      const skipBtn = document.getElementById("skipBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const modeTablesBtn = document.getElementById("modeTablesBtn");
+      const modeSquaresBtn = document.getElementById("modeSquaresBtn");
+      const modeCubesBtn = document.getElementById("modeCubesBtn");
+      const tablesSection = document.getElementById("tablesSection");
+      const squaresSection = document.getElementById("squaresSection");
+      const cubesSection = document.getElementById("cubesSection");
+      const questionCard = document.getElementById("questionCard");
+
+      let currentMode = "tables"; // 'tables' | 'squares' | 'cubes'
+
+      // --- Init ---
+      function init() {
+        loadStats();
+        buildSelectors();
+        restoreMode();
+        updateStatsDisplay();
+        wireEvents();
+      }
+      // ================= Scheduler helpers (paste near other helpers) =================
+
+      // PARAMETERS you can tweak for faster learning
+      const SCHED = {
+        targetTime: 1.2, // seconds considered 'fast' for a small table fact (tweak to taste)
+        baseNewPriority: 8, // weight for never-seen items
+        masteryAccuracy: 0.95, // accuracy threshold to consider mastered
+        masteryTimeFactor: 0.6, // avgTime / targetTime must be less than this to be fast
+        minIntervalHrs: 1 / 6, // 10 minutes minimum interval for newly learned (in hours)
+        maxIntervalHrs: 24 * 365, // cap interval (1 year)
+        easeFactorStart: 2.5,
+      };
+
+      // Ensure item has scheduler fields
+      function ensureScheduledFields(itemKey) {
+        const s = stats[itemKey] || {};
+        if (!s._sched) {
+          s._sched = {
+            reps: 0, // number of successful repetitions
+            intervalHrs: 0, // current interval in hours
+            ease: SCHED.easeFactorStart, // ease factor >1 helps interval grow
+            nextDue: 0, // timestamp ms for next scheduled review (0 => now)
+            lastReviewed: 0, // timestamp ms of last review
+          };
+        }
+        stats[itemKey] = s;
+      }
+
+      // SM-2-ish update: call after each answer with correct:boolean and timeTaken in seconds
+      function scheduleItemOnResult(itemKey, correct, timeTaken) {
+        ensureScheduledFields(itemKey);
+        const now = Date.now();
+        const s = stats[itemKey];
+        const sched = s._sched;
+
+        // Basic performance metrics
+        const isFast = timeTaken <= SCHED.targetTime;
+        const accuracy = (s.correct || 0) / Math.max(1, s.attempts || 1);
+
+        if (correct) {
+          sched.reps = (sched.reps || 0) + 1;
+          // increase ease a little if answers are correct and fast
+          if (isFast) sched.ease = Math.min(4.0, sched.ease + 0.06);
+          else sched.ease = Math.max(1.3, sched.ease - 0.03);
+
+          // compute next interval
+          if (sched.reps === 1) {
+            sched.intervalHrs = Math.max(SCHED.minIntervalHrs, 0.5); // 30 minutes
+          } else if (sched.reps === 2) {
+            sched.intervalHrs = Math.max(SCHED.minIntervalHrs, 6); // hours
+          } else {
+            // SM-2 style: interval = previous_interval * ease
+            sched.intervalHrs = Math.min(
+              SCHED.maxIntervalHrs,
+              Math.max(SCHED.minIntervalHrs, sched.intervalHrs * sched.ease)
+            );
+          }
+        } else {
+          // wrong answer: reset reps and shorten interval heavily
+          sched.reps = Math.max(0, (sched.reps || 0) - 1);
+          sched.ease = Math.max(1.3, sched.ease - 0.2); // penalize ease
+          // set short re-study interval: a few minutes to an hour depending on difficulty
+          sched.intervalHrs = Math.min(
+            4,
+            Math.max(0.08, (timeTaken / SCHED.targetTime) * 0.2)
+          ); // 5-20 minutes
+        }
+
+        // compute nextDue and lastReviewed
+        sched.lastReviewed = now;
+        sched.nextDue = now + Math.round(sched.intervalHrs * 3600 * 1000);
+
+        // store small metadata for weight calc
+        s._sched = sched;
+        stats[itemKey] = s;
+      }
+
+      // compute a priority weight for selection (higher -> more likely)
+      function computePriorityForItem(itemKey) {
+        const s = stats[itemKey] || {};
+        const sched = s._sched || {};
+        const now = Date.now();
+
+        // Base weight for unseen
+        if (!s.attempts || s.attempts === 0) {
+          return SCHED.baseNewPriority * 1.2;
+        }
+
+        // Determine correctness and avgTime
+        const avgTime = s.attempts
+          ? s.totalTime / s.attempts
+          : SCHED.targetTime * 1.5;
+        const acc = s.correct ? s.correct / Math.max(1, s.attempts) : 0;
+
+        // mastered items should have minimal weight unless overdue
+        const mastered =
+          acc >= SCHED.masteryAccuracy &&
+          avgTime / SCHED.targetTime <= SCHED.masteryTimeFactor;
+
+        // overdue factor: how overdue is it (in hours)
+        const nextDue = sched.nextDue || 0;
+        const hoursUntilDue = (nextDue - now) / (1000 * 3600);
+        const overdueBoost =
+          hoursUntilDue <= 0
+            ? 1 + Math.min(5, Math.abs(hoursUntilDue))
+            : 1 / (1 + hoursUntilDue);
+
+        // time penalty/boost: slower responses increase priority
+        const timeFactor = Math.min(
+          6,
+          Math.max(0.6, avgTime / SCHED.targetTime)
+        );
+
+        // error factor: more wrongs increase weight
+        const wrongs = s.attempts - (s.correct || 0);
+        const wrongFactor = 1 + Math.min(6, wrongs * 0.6);
+
+        // repetitions factor: early reps (low sched.reps) are higher priority
+        const repFactor = 1 / (1 + (sched.reps || 0) * 0.35);
+
+        // final priority
+        let weight = 1;
+        if (mastered) {
+          // if mastered, low base but if overdue then bring it back
+          weight = 0.3 * overdueBoost * timeFactor;
+        } else {
+          weight = Math.max(
+            1,
+            SCHED.baseNewPriority *
+              repFactor *
+              wrongFactor *
+              timeFactor *
+              overdueBoost
+          );
+        }
+
+        return weight;
+      }
+
+      function loadStats() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY_STATS);
+          if (raw) stats = JSON.parse(raw);
+        } catch (e) {
+          stats = {};
+        }
+      }
+      function saveStats() {
+        localStorage.setItem(STORAGE_KEY_STATS, JSON.stringify(stats));
+      }
+
+      function loadSettings() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
+          if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return {
+          selectedTables: [10, 11, 12, 13, 14, 15],
+          selectedSquares: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+          selectedCubes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+          mode: "tables",
+        };
+      }
+      function saveSettings(s) {
+        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(s));
+      }
+
+      // --- Build selectors ---
+      function buildSelectors() {
+        const settings = loadSettings();
+        const tables = new Set(settings.selectedTables || []);
+        tablesSelectEl.innerHTML = "";
+        for (let n = 1; n <= 20; n++) {
+          const label = document.createElement("label");
+          label.className = "table-pill";
+          if (tables.has(n)) label.classList.add("active");
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = n;
+          checkbox.checked = tables.has(n);
+          checkbox.addEventListener("change", () => {
+            label.classList.toggle("active", checkbox.checked);
+            saveCurrentSelections();
+          });
+          label.appendChild(checkbox);
+          label.appendChild(document.createTextNode("× " + n));
+          tablesSelectEl.appendChild(label);
+        }
+
+        // squares
+        const sq = new Set(settings.selectedSquares || []);
+        squaresSelectEl.innerHTML = "";
+        for (let n = 1; n <= 30; n++) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "table-pill";
+          btn.style.border = "1px solid var(--pill-border)";
+          btn.textContent = n;
+          if (sq.has(n)) btn.classList.add("active");
+          btn.addEventListener("click", () => {
+            btn.classList.toggle("active");
+            saveCurrentSelections();
+          });
+          squaresSelectEl.appendChild(btn);
+        }
+
+        // cubes
+        const cb = new Set(settings.selectedCubes || []);
+        cubesSelectEl.innerHTML = "";
+        for (let n = 1; n <= 20; n++) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "table-pill";
+          btn.textContent = n;
+          if (cb.has(n)) btn.classList.add("active");
+          btn.addEventListener("click", () => {
+            btn.classList.toggle("active");
+            saveCurrentSelections();
+          });
+          cubesSelectEl.appendChild(btn);
+        }
+      }
+
+      function getSelectedTables() {
+        const inputs = tablesSelectEl.querySelectorAll("input");
+        const list = [];
+        inputs.forEach((i) => {
+          if (i.checked) list.push(parseInt(i.value, 10));
+        });
+        return list;
+      }
+      function getSelectedSquares() {
+        const btns = squaresSelectEl.querySelectorAll("button");
+        const list = [];
+        btns.forEach((b, idx) => {
+          if (b.classList.contains("active")) list.push(idx + 1);
+        });
+        return list;
+      }
+      function getSelectedCubes() {
+        const btns = cubesSelectEl.querySelectorAll("button");
+        const list = [];
+        btns.forEach((b, idx) => {
+          if (b.classList.contains("active")) list.push(idx + 1);
+        });
+        return list;
+      }
+
+      function saveCurrentSelections() {
+        const st = {
+          selectedTables: getSelectedTables(),
+          selectedSquares: getSelectedSquares(),
+          selectedCubes: getSelectedCubes(),
+          mode: currentMode,
+        };
+        saveSettings(st);
+      }
+
+      // --- Audio feedback using WebAudio ---
+      function ensureAudioCtx() {
+        if (!audioCtx)
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        return audioCtx;
+      }
+      function playTone(freq, duration = 0.12, type = "sine", gain = 0.22) {
+        try {
+          const ctx = ensureAudioCtx();
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = type;
+          o.frequency.value = freq;
+          g.gain.value = gain;
+          o.connect(g);
+          g.connect(ctx.destination);
+          o.start();
+          g.gain.exponentialRampToValueAtTime(
+            0.0001,
+            ctx.currentTime + duration
+          );
+          setTimeout(() => {
+            try {
+              o.stop();
+              o.disconnect();
+              g.disconnect();
+            } catch (e) {}
+          }, (duration + 0.02) * 1000);
+        } catch (e) {
+          /* ignore */
+        }
+      }
+      function playCorrect() {
+        playTone(880, 0.12, "sine", 0.5);
+        setTimeout(() => playTone(1320, 0.14, "sine", 0.44), 100);
+      }
+      function playWrong() {
+        playTone(220, 0.26, "sawtooth", 0.6);
+      }
+
+      // --- Candidate generation (tables ×1..10, squares, cubes) ---
+      // ================= New pickNextQuestion using spaced repetition + session mixing =================
+      function pickNextQuestion() {
+        const selectedTables = getSelectedTables();
+        const selectedSquares = getSelectedSquares();
+        const selectedCubes = getSelectedCubes();
+
+        if (currentMode === "tables" && selectedTables.length === 0) {
+          alert("Select at least one table");
+          return null;
+        }
+        if (currentMode === "squares" && selectedSquares.length === 0) {
+          alert("Select at least one square");
+          return null;
+        }
+        if (currentMode === "cubes" && selectedCubes.length === 0) {
+          alert("Select at least one cube");
+          return null;
+        }
+
+        // Build candidate pool (same as before but add itemKey)
+        const pool = [];
+        if (currentMode === "tables") {
+          selectedTables.forEach((base) => {
+            for (let m = 1; m <= 10; m++) {
+              const key = `t ${base}x${m}`;
+              if (!stats[key])
+                stats[key] = {
+                  a: base,
+                  b: m,
+                  attempts: 0,
+                  correct: 0,
+                  totalTime: 0,
+                  type: "table",
+                }; // ensure minimal structure
+              ensureScheduledFields(key);
+              pool.push({ type: "table", a: base, b: m, key });
+            }
+          });
+        } else if (currentMode === "squares") {
+          selectedSquares.forEach((n) => {
+            const key = `s ${n}`;
+            if (!stats[key])
+              stats[key] = { n: n, attempts: 0, correct: 0, totalTime: 0, type: "square" };
+            ensureScheduledFields(key);
+            pool.push({ type: "square", n, key });
+          });
+        } else {
+          // cubes
+          selectedCubes.forEach((n) => {
+            const key = `c ${n}`;
+            if (!stats[key])
+              stats[key] = { n: n, attempts: 0, correct: 0, totalTime: 0, type: "cube" };
+            ensureScheduledFields(key);
+            pool.push({ type: "cube", n, key });
+          });
+        }
+
+        // compute priorities
+        const scored = pool.map((item) => {
+          return { item, weight: computePriorityForItem(item.key) };
+        });
+
+        // Now apply session mixing:
+        // We will try to pick with probabilities to create a healthy mix:
+        //  - 40% struggling (weight high & low accuracy),
+        //  - 30% learning (recently introduced, low attempts),
+        //  - 30% review (due/overdue scheduled items)
+        const now = Date.now();
+        const struggling = [];
+        const learning = [];
+        const review = [];
+
+        scored.forEach((obj) => {
+          const s = stats[obj.item.key];
+          const acc = s.attempts ? s.correct / s.attempts : 0;
+          const attempts = s.attempts || 0;
+          const sched = s._sched || {};
+          const overdue = (sched.nextDue || 0) <= now;
+          // heuristic buckets
+          if (attempts === 0 || attempts <= 1) learning.push(obj);
+          else if (acc < 0.7 || obj.weight > SCHED.baseNewPriority * 0.9)
+            struggling.push(obj);
+          else review.push(obj);
+        });
+
+        // function to randomly pick from a bucket weighted by weight
+        function pickFromBucket(bucket) {
+          if (!bucket || bucket.length === 0) return null;
+          const total = bucket.reduce((sum, b) => sum + b.weight, 0);
+          let r = Math.random() * total;
+          for (const b of bucket) {
+            if (r < b.weight) return b.item;
+            r -= b.weight;
+          }
+          return bucket[bucket.length - 1].item;
+        }
+
+        // Decide which bucket to draw from
+        const rand = Math.random();
+        let pick = null;
+        if (rand < 0.4 && struggling.length) pick = pickFromBucket(struggling);
+        else if (rand < 0.7 && learning.length) pick = pickFromBucket(learning);
+        else if (review.length) pick = pickFromBucket(review);
+        else {
+          // fallbacks if chosen bucket empty
+          pick =
+            pickFromBucket(struggling) ||
+            pickFromBucket(learning) ||
+            pickFromBucket(review) ||
+            (scored.length ? scored[0].item : null);
+        }
+
+        return pick;
+      }
+
+      function showNewQuestion() {
+        isPaused = false;
+        pausedElapsed = 0;
+        pauseBtn.textContent = "Pause";
+        const q = pickNextQuestion();
+        if (!q) return;
+        currentQuestion = q;
+        questionStartTime = performance.now();
+        if (q.type === "table") {
+          questionDisplayEl.textContent = `${q.a} × ${q.b} = ?`;
+        } else if (q.type === "square") {
+          questionDisplayEl.textContent = `${q.n}² = ?`;
+        } else {
+          questionDisplayEl.textContent = `${q.n}³ = ?`;
+        }
+        feedbackEl.textContent = "";
+        feedbackEl.className = "feedback";
+        timingInfoEl.textContent = "";
+        answerInputEl.value = "";
+        answerInputEl.focus();
+      }
+
+      function submitAnswer() {
+        if (isPaused) {
+          feedbackEl.textContent = "Paused — press Resume to continue timing.";
+          feedbackEl.className = "feedback wrong";
+          return;
+        }
+        if (!currentQuestion || questionStartTime === null) {
+          showNewQuestion();
+          return;
+        }
+        const raw = answerInputEl.value.trim();
+        const userVal = parseInt(raw, 10);
+        if (isNaN(userVal)) {
+          feedbackEl.textContent = "Type your answer and press Enter.";
+          feedbackEl.className = "feedback wrong";
+          return;
+        }
+        const end = performance.now();
+        const elapsedBefore = pausedElapsed || 0;
+        const timeTaken = (end - questionStartTime) / 1000 + elapsedBefore;
+        questionStartTime = null;
+        pausedElapsed = 0;
+        let correctAnswer;
+        if (currentQuestion.type === "table")
+          correctAnswer = currentQuestion.a * currentQuestion.b;
+        else if (currentQuestion.type === "square")
+          correctAnswer = currentQuestion.n * currentQuestion.n;
+        else
+          correctAnswer =
+            currentQuestion.n * currentQuestion.n * currentQuestion.n;
+        const key = currentQuestion.key;
+
+        // compute correctness (BUG FIX: define isCorrect)
+        const isCorrect = userVal === correctAnswer;
+
+        // ===== Replace stats update/save section with this block =====
+        if (!stats[key]) {
+          stats[key] = {
+            a: currentQuestion.a,
+            b: currentQuestion.b,
+            n: currentQuestion.n,
+            attempts: 0,
+            correct: 0,
+            totalTime: 0,
+            type: currentQuestion.type || "unknown",
+          };
+        }
+        // update basic stats
+        const s = stats[key];
+        s.attempts += 1;
+        if (isCorrect) s.correct += 1;
+        s.totalTime += timeTaken;
+        s.lastTime = timeTaken;
+        s.lastCorrect = isCorrect;
+        s.history = s.history || [];
+        s.history.push({
+          timestamp: new Date().toISOString(),
+          userAnswer: userVal,
+          correctAnswer,
+          time: timeTaken,
+        });
+
+        // call scheduler to set next review
+        scheduleItemOnResult(key, isCorrect, timeTaken);
+
+        // save
+        saveStats();
+        updateStatsDisplay();
+
+        if (isCorrect) {
+          feedbackEl.textContent = "Correct ✅";
+          feedbackEl.className = "feedback correct";
+          playCorrect();
+          questionCard.classList.add("flash-correct");
+          setTimeout(() => questionCard.classList.remove("flash-correct"), 700);
+        } else {
+          feedbackEl.textContent = `Wrong ❌  Correct answer is ${correctAnswer}`;
+          feedbackEl.className = "feedback wrong";
+          playWrong();
+          questionCard.classList.add("flash-wrong");
+          setTimeout(() => questionCard.classList.remove("flash-wrong"), 700);
+        }
+        timingInfoEl.textContent = `Time: ${timeTaken.toFixed(2)} s`;
+        setTimeout(showNewQuestion, 700);
+      }
+
+      function pauseOrResume() {
+        if (!currentQuestion) return;
+        if (!isPaused) {
+          // pause
+          const now = performance.now();
+          pausedElapsed = (now - questionStartTime) / 1000;
+          questionStartTime = null;
+          isPaused = true;
+          pauseBtn.textContent = "Resume";
+          feedbackEl.textContent = "Paused — timing stopped.";
+          feedbackEl.className = "feedback wrong";
+        } else {
+          // resume
+          questionStartTime = performance.now();
+          isPaused = false;
+          pauseBtn.textContent = "Pause";
+          feedbackEl.textContent = "Resumed — timing continues.";
+          feedbackEl.className = "feedback";
+          answerInputEl.focus();
+        }
+      }
+
+      function skipQuestion() {
+        // skip current question without recording; simply show next
+        if (!currentQuestion) {
+          showNewQuestion();
+          return;
+        }
+        feedbackEl.textContent = "Skipped — no record saved.";
+        feedbackEl.className = "feedback wrong";
+        questionStartTime = null;
+        pausedElapsed = 0;
+        isPaused = false;
+        setTimeout(showNewQuestion, 300);
+      }
+
+      function updateStatsDisplay() {
+        const all = Object.values(stats);
+        const totalAttempts = all.reduce((acc, s) => acc + s.attempts, 0);
+        const totalCorrect = all.reduce((acc, s) => acc + s.correct, 0);
+        const totalTime = all.reduce((acc, s) => acc + s.totalTime, 0);
+        totalStatEl.textContent = `Total: ${totalAttempts}`;
+        if (totalAttempts === 0) {
+          accuracyStatEl.textContent = "Accuracy: –";
+          avgTimeStatEl.textContent = "Avg time: –";
+        } else {
+          const acc = (100 * totalCorrect) / totalAttempts;
+          const avg = totalTime / totalAttempts;
+          accuracyStatEl.textContent = `Accuracy: ${acc.toFixed(1)}%`;
+          avgTimeStatEl.textContent = `Avg time: ${avg.toFixed(2)} s`;
+        }
+      }
+
+      function resetStats() {
+        if (!confirm("Reset all stats and start fresh?")) return;
+        stats = {};
+        saveStats();
+        updateStatsDisplay();
+      }
+
+      function downloadLog() {
+        const all = Object.values(stats);
+        if (!all.length) {
+          alert("No stats yet to export.");
+          return;
+        }
+        let lines = [];
+        lines.push(
+          "key,type,question,attempts,correct,totalTime,avgTime,lastTime,lastCorrect"
+        );
+        all.forEach((s) => {
+          const avg = s.attempts ? s.totalTime / s.attempts : 0;
+          lines.push(
+            [
+              s.key,
+              s.type || "",
+              `"${s.key}"`,
+              s.attempts,
+              s.correct,
+              s.totalTime.toFixed(3),
+              avg.toFixed(3),
+              (s.lastTime || 0).toFixed(3),
+              s.lastCorrect ? "true" : "false",
+            ].join(",")
+          );
+        });
+        const blob = new Blob([lines.join("")], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "tables-trainer-log.txt";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      // Mode switching UI
+      function setMode(mode) {
+        currentMode = mode;
+        document
+          .querySelectorAll(".mode-btn")
+          .forEach((b) => b.classList.toggle("active", b.dataset.mode === mode));
+        tablesSection.style.display = mode === "tables" ? "block" : "none";
+        squaresSection.style.display = mode === "squares" ? "block" : "none";
+        cubesSection.style.display = mode === "cubes" ? "block" : "none";
+        saveCurrentSelections();
+      }
+      function restoreMode() {
+        const s = loadSettings();
+        setMode(s.mode || "tables");
+      }
+
+      function wireEvents() {
+        nextBtn.addEventListener("click", showNewQuestion);
+        pauseBtn.addEventListener("click", pauseOrResume);
+        skipBtn.addEventListener("click", skipQuestion);
+        resetBtn.addEventListener("click", resetStats);
+        downloadBtn.addEventListener("click", downloadLog);
+        answerInputEl.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") submitAnswer();
+        });
+        modeTablesBtn.addEventListener("click", () => setMode("tables"));
+        modeSquaresBtn.addEventListener("click", () => setMode("squares"));
+        modeCubesBtn.addEventListener("click", () => setMode("cubes"));
+      }
+
+      init();
+    </script>
+  </body>
 </html>

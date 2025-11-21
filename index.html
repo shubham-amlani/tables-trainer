@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Multiplication Tables Trainer</title>
+  <style>
+    :root{
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --text: #111827;
+      --accent: #111827;
+      --pill-border: #d1d5db;
+      --success: #15803d;
+      --danger: #b91c1c;
+      --glass: rgba(17,24,39,0.04);
+    }
+
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+
+    html,body{height:100%}
+    body{
+      margin:0;
+      padding:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:var(--bg);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:20px;
+    }
+
+    .app{
+      width:100%;
+      max-width:900px;
+      background:var(--card);
+      border-radius:14px;
+      padding:20px;
+      box-shadow:0 18px 35px rgba(15,23,42,0.08);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    h1{
+      margin:0;
+      font-size:clamp(18px,2.6vw,24px);
+      letter-spacing:0.02em;
+    }
+
+    .subtitle{
+      font-size:13px;
+      color:var(--muted);
+      margin:0;
+      text-align:right;
+    }
+
+    /* Controls area */
+    .controls{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+
+    .left-controls{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width:160px;
+      max-width:66%;
+    }
+
+    .tiny{font-size:12px;color:var(--muted)}
+
+    .tables-select{
+      display:grid;
+      grid-template-columns:repeat(8,auto);
+      gap:6px;
+      align-items:center;
+    }
+
+    .table-pill{
+      font-size:12px;
+      padding:6px 8px;
+      border-radius:999px;
+      border:1px solid var(--pill-border);
+      cursor:pointer;
+      user-select:none;
+      background:transparent;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:42px;
+      text-align:center;
+    }
+
+    .table-pill.active{
+      background:var(--accent);
+      color:#fff;
+      border-color:var(--accent);
+    }
+
+    .buttons-group{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+      min-width:160px;
+    }
+
+    button{
+      border:0;
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:13px;
+      cursor:pointer;
+      background:var(--accent);
+      color:white;
+      min-height:40px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    button.secondary{
+      background:#e5e7eb;
+      color:var(--text);
+    }
+
+    button.danger{
+      background:#fecaca;
+      color:#7f1d1d;
+    }
+
+    button:disabled{opacity:0.5;cursor:default}
+
+    /* Question card */
+    .question-card{
+      margin-top:6px;
+      padding:20px;
+      border-radius:12px;
+      border:1px solid #e5e7eb;
+      background:linear-gradient(180deg,var(--card),var(--glass));
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:center;
+    }
+
+    .question{
+      font-weight:700;
+      font-size:clamp(28px,8vw,48px); /* responsive big number */
+      margin:0;
+      letter-spacing:0.02em;
+    }
+
+    .input-row{
+      width:100%;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+
+    input[type="number"]{
+      font-size:20px;
+      padding:10px 12px;
+      width:180px;
+      text-align:center;
+      border-radius:10px;
+      border:1px solid var(--pill-border);
+      outline:none;
+    }
+
+    input[type="number"]:focus{
+      box-shadow:0 0 0 3px rgba(34,197,94,0.06);
+      border-color:rgba(17,24,39,0.6);
+    }
+
+    .feedback{min-height:20px;font-size:14px;text-align:center}
+
+    .feedback.correct{color:var(--success)}
+    .feedback.wrong{color:var(--danger)}
+
+    .timing{font-size:13px;color:var(--muted);text-align:center}
+
+    .stats{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:center;
+      width:100%;
+    }
+
+    .stat-chip{
+      background:#f8fafc;
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:13px;
+      color:#374151;
+    }
+
+    .warning{color:#b45309;font-size:12px;margin-top:4px;text-align:left}
+
+    /* Responsive adjustments */
+    @media (max-width:820px){
+      .tables-select{grid-template-columns:repeat(6,auto)}
+      .left-controls{max-width:100%}
+      .buttons-group{min-width:120px;justify-content:flex-start}
+    }
+
+    @media (max-width:560px){
+      .controls{flex-direction:column;align-items:stretch}
+      .tables-select{grid-template-columns:repeat(5,auto)}
+      .table-pill{min-width:36px;padding:6px}
+      .buttons-group{flex-direction:row;gap:6px;justify-content:space-between}
+      input[type="number"]{width:140px}
+      .question{font-size:clamp(22px,12vw,36px)}
+      button{flex:1 1 auto;min-height:44px;padding:10px}
+    }
+
+    @media (max-width:380px){
+      .tables-select{grid-template-columns:repeat(4,auto)}
+      input[type="number"]{width:120px}
+      .question{font-size:clamp(20px,14vw,32px)}
+    }
+  </style>
+</head>
+<body>
+<div class="app" role="main" aria-label="Tables Trainer">
+  <header>
+    <h1>Tables Trainer</h1>
+    <p class="subtitle">Select tables (1–20). Multipliers are limited to <strong>1–10</strong>. Answer and press Enter or OK.</p>
+  </header>
+
+  <div class="controls" aria-hidden="false">
+    <div class="left-controls">
+      <div class="tiny">Select tables (1–20):</div>
+      <div class="tables-select" id="tablesSelect" aria-label="Tables selection"></div>
+      <div class="warning" id="tablesWarning" style="display:none">Select at least one table to start.</div>
+    </div>
+
+    <div class="buttons-group" role="toolbar" aria-label="Actions">
+      <button id="nextBtn" aria-label="Start or show next question">Start / Next</button>
+      <button id="downloadBtn" class="secondary" type="button" aria-label="Download performance log">Download log</button>
+      <button id="resetBtn" class="danger" type="button" aria-label="Reset statistics">Reset stats</button>
+    </div>
+  </div>
+
+  <div class="question-card" aria-live="polite">
+    <div class="question" id="questionDisplay">– × –</div>
+
+    <div class="input-row">
+      <input type="number" id="answerInput" placeholder="Answer" autocomplete="off" inputmode="numeric" aria-label="Answer input" />
+      <button id="submitBtn" type="button" aria-label="Submit answer">OK</button>
+    </div>
+
+    <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+    <div class="timing" id="timingInfo" aria-hidden="true"></div>
+
+    <div class="stats" aria-hidden="false">
+      <div class="stat-chip" id="totalStat">Total: 0</div>
+      <div class="stat-chip" id="accuracyStat">Accuracy: –</div>
+      <div class="stat-chip" id="avgTimeStat">Avg time: –</div>
+      <div class="stat-chip" id="focusStat">Focus: slow/wrong ones</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // unchanged logic except multiplier limited 1..10 and small defaults
+  const STORAGE_KEY_STATS = "tablesTrainerStatsV1";
+  const STORAGE_KEY_SETTINGS = "tablesTrainerSettingsV1";
+
+  let stats = {};
+  let currentQuestion = null;
+  let questionStartTime = null;
+
+  const tablesSelectEl = document.getElementById("tablesSelect");
+  const tablesWarningEl = document.getElementById("tablesWarning");
+  const questionDisplayEl = document.getElementById("questionDisplay");
+  const answerInputEl = document.getElementById("answerInput");
+  const feedbackEl = document.getElementById("feedback");
+  const timingInfoEl = document.getElementById("timingInfo");
+  const totalStatEl = document.getElementById("totalStat");
+  const accuracyStatEl = document.getElementById("accuracyStat");
+  const avgTimeStatEl = document.getElementById("avgTimeStat");
+
+  const nextBtn = document.getElementById("nextBtn");
+  const submitBtn = document.getElementById("submitBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const downloadBtn = document.getElementById("downloadBtn");
+
+  function init(){
+    loadStats();
+    buildTableSelector();
+    updateStatsDisplay();
+    wireEvents();
+  }
+
+  function loadStats(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY_STATS);
+      if(raw) stats = JSON.parse(raw);
+    }catch(e){ stats = {} }
+  }
+
+  function saveStats(){
+    localStorage.setItem(STORAGE_KEY_STATS, JSON.stringify(stats));
+  }
+
+  function loadSettings(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    return { selectedTables: [10,11,12,13,14,15] };
+  }
+
+  function saveSettings(settings){
+    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+  }
+
+  function buildTableSelector(){
+    const settings = loadSettings();
+    const selected = new Set(settings.selectedTables || []);
+    tablesSelectEl.innerHTML = "";
+    for(let n=1;n<=20;n++){
+      const label = document.createElement("label");
+      label.className = "table-pill";
+      if(selected.has(n)) label.classList.add("active");
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.value = n;
+      checkbox.checked = selected.has(n);
+      checkbox.addEventListener("change", () => {
+        label.classList.toggle("active", checkbox.checked);
+        saveCurrentTableSelection();
+      });
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode("× " + n));
+      tablesSelectEl.appendChild(label);
+    }
+  }
+
+  function getSelectedTables(){
+    const pills = tablesSelectEl.querySelectorAll("label.table-pill input");
+    const list = [];
+    pills.forEach((input) => {
+      if(input.checked) list.push(parseInt(input.value,10));
+    });
+    return list;
+  }
+
+  function saveCurrentTableSelection(){
+    const selectedTables = getSelectedTables();
+    saveSettings({ selectedTables });
+  }
+
+  // pickNextQuestion: selected table x multiplier(1..10). weighting uses stats.
+  function pickNextQuestion(){
+    const selectedTables = getSelectedTables();
+    if(!selectedTables.length){
+      tablesWarningEl.style.display = "block";
+      return null;
+    } else {
+      tablesWarningEl.style.display = "none";
+    }
+
+    const candidates = [];
+    selectedTables.forEach((base) => {
+      for(let m=1;m<=10;m++){ // <-- multiplier limited to 1..10
+        const a = base, b = m;
+        const key = `${a} x ${b}`;
+        const s = stats[key];
+        let weight;
+        if(!s || s.attempts === 0){
+          weight = 8;
+        } else {
+          const wrong = s.attempts - s.correct;
+          const avgTime = s.totalTime / s.attempts;
+          weight = 1 + wrong * 3 + Math.min(avgTime, 6);
+        }
+        candidates.push({a,b,key,weight});
+      }
+    });
+
+    const totalWeight = candidates.reduce((acc,c)=>acc+c.weight,0);
+    let r = Math.random() * totalWeight;
+    for(const c of candidates){
+      if(r < c.weight) return {a:c.a,b:c.b,key:c.key};
+      r -= c.weight;
+    }
+    return candidates[candidates.length-1];
+  }
+
+  function showNewQuestion(){
+    const q = pickNextQuestion();
+    if(!q) return;
+    currentQuestion = q;
+    questionDisplayEl.textContent = `${q.a} × ${q.b} = ?`;
+    feedbackEl.textContent = "";
+    feedbackEl.className = "feedback";
+    timingInfoEl.textContent = "";
+    answerInputEl.value = "";
+    answerInputEl.focus();
+    questionStartTime = performance.now();
+  }
+
+  function submitAnswer(){
+    if(!currentQuestion || questionStartTime === null){
+      showNewQuestion();
+      return;
+    }
+
+    const userVal = parseInt(answerInputEl.value,10);
+    if(isNaN(userVal)){
+      feedbackEl.textContent = "Type your answer and press OK or Enter.";
+      feedbackEl.className = "feedback wrong";
+      return;
+    }
+
+    const endTime = performance.now();
+    const timeTaken = (endTime - questionStartTime)/1000;
+    questionStartTime = null;
+
+    const {a,b,key} = currentQuestion;
+    const correctAnswer = a*b;
+    const isCorrect = userVal === correctAnswer;
+
+    if(!stats[key]) stats[key] = {a,b,attempts:0,correct:0,totalTime:0,lastTime:0,lastCorrect:false,history:[]};
+    const s = stats[key];
+    s.attempts += 1;
+    if(isCorrect) s.correct += 1;
+    s.totalTime += timeTaken;
+    s.lastTime = timeTaken;
+    s.lastCorrect = isCorrect;
+    s.history.push({timestamp:new Date().toISOString(),userAnswer:userVal,correctAnswer,time:timeTaken});
+
+    saveStats();
+    updateStatsDisplay();
+
+    if(isCorrect){
+      feedbackEl.textContent = "Correct ✅";
+      feedbackEl.className = "feedback correct";
+    } else {
+      feedbackEl.textContent = `Wrong ❌  Correct answer is ${correctAnswer}`;
+      feedbackEl.className = "feedback wrong";
+    }
+
+    timingInfoEl.textContent = `Time: ${timeTaken.toFixed(2)} s`;
+    setTimeout(showNewQuestion,700);
+  }
+
+  function updateStatsDisplay(){
+    const all = Object.values(stats);
+    const totalAttempts = all.reduce((acc,s)=>acc+s.attempts,0);
+    const totalCorrect = all.reduce((acc,s)=>acc+s.correct,0);
+    const totalTime = all.reduce((acc,s)=>acc+s.totalTime,0);
+
+    totalStatEl.textContent = `Total: ${totalAttempts}`;
+    if(totalAttempts===0){
+      accuracyStatEl.textContent = "Accuracy: –";
+      avgTimeStatEl.textContent = "Avg time: –";
+    } else {
+      const acc = (100*totalCorrect)/totalAttempts;
+      const avgT = totalTime/totalAttempts;
+      accuracyStatEl.textContent = `Accuracy: ${acc.toFixed(1)}%`;
+      avgTimeStatEl.textContent = `Avg time: ${avgT.toFixed(2)} s`;
+    }
+  }
+
+  function resetStats(){
+    if(!confirm("Reset all stats and start fresh?")) return;
+    stats = {};
+    saveStats();
+    updateStatsDisplay();
+  }
+
+  function downloadLog(){
+    const all = Object.values(stats);
+    if(!all.length){ alert("No stats yet to export."); return;}
+    let lines = [];
+    lines.push("a,b,question,attempts,correct,totalTime,avgTime,lastTime,lastCorrect");
+    all.forEach((s)=>{
+      const avgTime = s.attempts ? s.totalTime/s.attempts : 0;
+      lines.push([s.a,s.b,`"${s.a} x ${s.b}"`,s.attempts,s.correct,s.totalTime.toFixed(3),avgTime.toFixed(3),s.lastTime.toFixed(3),s.lastCorrect ? "true":"false"].join(","));
+    });
+    const blob = new Blob([lines.join("\n")],{type:"text/plain"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "tables-trainer-log.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function wireEvents(){
+    nextBtn.addEventListener("click",showNewQuestion);
+    submitBtn.addEventListener("click",submitAnswer);
+    resetBtn.addEventListener("click",resetStats);
+    downloadBtn.addEventListener("click",downloadLog);
+    answerInputEl.addEventListener("keydown",(e)=>{ if(e.key==="Enter") submitAnswer();});
+  }
+
+  init();
+</script>
+</body>
+</html>

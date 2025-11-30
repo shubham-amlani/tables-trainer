@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Tables Trainer — Enhanced (Fixed Table Capsules)</title>
+    <title>Tables + Trig Trainer — Enhanced</title>
     <style>
       /* ---------- Vars & Resets ---------- */
       :root {
@@ -53,7 +53,7 @@
         box-shadow: 0 16px 40px rgba(2, 6, 23, 0.6);
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 18px;
       }
 
       header {
@@ -118,6 +118,28 @@
         background: linear-gradient(90deg, var(--accent), var(--accent-2));
         color: #fff;
         box-shadow: 0 10px 26px rgba(37, 99, 235, 0.14);
+        border-color: transparent;
+      }
+
+      /* trig unit toggle (only visible in trig mode) */
+      .trig-unit-toggle {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+      }
+      .trig-unit-btn {
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.5);
+        background: transparent;
+        color: var(--muted);
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .trig-unit-btn.active {
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        color: #fff;
         border-color: transparent;
       }
 
@@ -243,7 +265,7 @@
         display: flex;
         justify-content: center;
       }
-      input[type="number"] {
+      input[type="text"] {
         font-size: 20px;
         padding: 12px 14px;
         width: 220px;
@@ -254,10 +276,10 @@
         text-align: center;
         outline: none;
       }
-      input[type="number"]::placeholder {
+      input::placeholder {
         color: rgba(255, 255, 255, 0.4);
       }
-      input[type="number"]:focus {
+      input:focus {
         box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
         border-color: rgba(37, 99, 235, 0.22);
       }
@@ -272,6 +294,12 @@
       }
       .feedback.wrong {
         color: var(--danger);
+      }
+
+      .timing {
+        font-size: 13px;
+        color: var(--muted);
+        text-align: center;
       }
 
       .stats {
@@ -329,6 +357,30 @@
         }
       }
 
+      /* trig input toolbar */
+      .trig-toolbar {
+        margin-top: 6px;
+        display: none;
+        gap: 6px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .trig-toolbar-btn {
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.5);
+        background: rgba(15, 23, 42, 0.8);
+        color: #e5edff;
+        font-size: 13px;
+        padding: 4px 10px;
+        cursor: pointer;
+      }
+      .trig-toolbar-text {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 2px;
+        text-align: center;
+      }
+
       @media (max-width: 920px) {
         .tables-select {
           grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
@@ -348,7 +400,7 @@
         }
       }
       @media (max-width: 640px) {
-        input[type="number"] {
+        input[type="text"] {
           width: 160px;
         }
         .table-pill {
@@ -370,12 +422,12 @@
   </head>
 
   <body>
-    <div class="app" role="main" aria-label="Tables Trainer Enhanced">
+    <div class="app" role="main" aria-label="Tables + Trig Trainer">
       <header>
-        <h1>Tables Trainer — Enhanced</h1>
+        <h1>Tables + Trig Trainer</h1>
         <p class="subtitle">
-          Practice Tables (×1–10), Squares (1–30), Cubes (1–20) and Mixed mode.
-          Select your sets, then press Start / Next.
+          Practice Tables (×1–10), Squares (1–30), Cubes (1–20), Mixed mode and
+          Trig ratio table with surds.
         </p>
       </header>
 
@@ -397,6 +449,27 @@
             </button>
             <button class="mode-btn" id="modeMixedBtn" data-mode="mixed">
               Mixed
+            </button>
+            <button class="mode-btn" id="modeTrigBtn" data-mode="trig">
+              Trig
+            </button>
+          </div>
+
+          <!-- Trig unit toggle (only in trig mode) -->
+          <div
+            class="trig-unit-toggle"
+            id="trigUnitToggle"
+            style="display: none"
+          >
+            <button
+              class="trig-unit-btn active"
+              data-unit="deg"
+              id="trigDegBtn"
+            >
+              Degrees
+            </button>
+            <button class="trig-unit-btn" data-unit="rad" id="trigRadBtn">
+              Radians
             </button>
           </div>
 
@@ -441,8 +514,8 @@
 
           <div class="note">
             Mixed mode will ask questions from all the currently selected items
-            (tables + squares + cubes). Use Select All to quickly pick
-            everything.
+            (tables + squares + cubes). Trig mode uses standard angles 0°, 30°,
+            45°, 60°, 90° with sin/cos/tan/cosec/sec/cot.
           </div>
         </div>
 
@@ -465,18 +538,35 @@
         </div>
       </div>
 
+      <!-- Main question card -->
       <div class="question-card" id="questionCard" aria-live="polite">
         <div class="question" id="questionDisplay">– × –</div>
 
         <div class="input-row">
           <input
-            type="number"
+            type="text"
             id="answerInput"
             placeholder="Type answer & press Enter"
             autocomplete="off"
             inputmode="numeric"
             aria-label="Answer input"
           />
+        </div>
+
+        <!-- Trig toolbar: only visible in trig mode -->
+        <div class="trig-toolbar" id="trigToolbar">
+          <button class="trig-toolbar-btn" data-insert="√">√</button>
+          <button class="trig-toolbar-btn" data-insert="root">root</button>
+          <button class="trig-toolbar-btn" data-insert="/">/</button>
+          <button class="trig-toolbar-btn" data-insert="sqrt()">sqrt()</button>
+        </div>
+        <div
+          class="trig-toolbar-text"
+          id="trigToolbarText"
+          style="display: none"
+        >
+          For trig: use forms like <b>√3/2</b>, <b>1/√3</b>, <b>√2/2</b>,
+          <b>2/√3</b>, etc. Buttons help you type √ and /.
         </div>
 
         <div
@@ -497,9 +587,9 @@
     </div>
 
     <script>
-      /* ====== Config & storage ====== */
-      const STORAGE_KEY_STATS = "tablesTrainerStatsV3";
-      const STORAGE_KEY_SETTINGS = "tablesTrainerSettingsV3";
+      /* ===================== Tables/Squares/Cubes/Trig Trainer ===================== */
+      const STORAGE_KEY_STATS = "tablesTrainerStatsV4";
+      const STORAGE_KEY_SETTINGS = "tablesTrainerSettingsV4";
 
       let stats = {};
       let currentQuestion = null;
@@ -509,7 +599,6 @@
       let pausedElapsed = 0;
       let currentMode = "tables";
 
-      // UI refs
       const tablesSelectEl = document.getElementById("tablesSelect");
       const squaresSelectEl = document.getElementById("squaresSelect");
       const cubesSelectEl = document.getElementById("cubesSelect");
@@ -529,6 +618,7 @@
       const modeSquaresBtn = document.getElementById("modeSquaresBtn");
       const modeCubesBtn = document.getElementById("modeCubesBtn");
       const modeMixedBtn = document.getElementById("modeMixedBtn");
+      const modeTrigBtn = document.getElementById("modeTrigBtn");
       const tablesSection = document.getElementById("tablesSection");
       const squaresSection = document.getElementById("squaresSection");
       const cubesSection = document.getElementById("cubesSection");
@@ -538,8 +628,13 @@
       );
       const selectAllCubesBtn = document.getElementById("selectAllCubesBtn");
       const questionCard = document.getElementById("questionCard");
+      const trigToolbar = document.getElementById("trigToolbar");
+      const trigToolbarText = document.getElementById("trigToolbarText");
+      const trigUnitToggle = document.getElementById("trigUnitToggle");
+      const trigDegBtn = document.getElementById("trigDegBtn");
+      const trigRadBtn = document.getElementById("trigRadBtn");
 
-      /* ====== Scheduler params ====== */
+      /* ===== Scheduler config ===== */
       const SCHED = {
         targetTime: 1.2,
         baseNewPriority: 8,
@@ -636,7 +731,7 @@
         return weight;
       }
 
-      /* ====== Storage ====== */
+      /* ===== Storage ===== */
       function loadStats() {
         try {
           const raw = localStorage.getItem(STORAGE_KEY_STATS);
@@ -658,17 +753,18 @@
           selectedSquares: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
           selectedCubes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
           mode: "tables",
+          trigUnit: "deg",
         };
       }
       function saveSettings(s) {
         localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(s));
       }
 
-      /* ====== Build selectors (tables as buttons now) ====== */
+      /* ===== Build selectors ===== */
       function buildSelectors() {
         const settings = loadSettings();
 
-        // Tables (buttons now)
+        // Tables
         const tables = new Set(settings.selectedTables || []);
         tablesSelectEl.innerHTML = "";
         for (let n = 1; n <= 20; n++) {
@@ -747,11 +843,11 @@
           selectedSquares: getSelectedSquares(),
           selectedCubes: getSelectedCubes(),
           mode: currentMode,
+          trigUnit,
         };
         saveSettings(st);
       }
 
-      /* Select All helpers */
       function selectAllTables(toggleTo) {
         const btns = tablesSelectEl.querySelectorAll("button");
         let changed = false;
@@ -807,7 +903,7 @@
         if (changed) saveCurrentSelections();
       }
 
-      /* ====== Audio ====== */
+      /* ===== Audio ===== */
       function ensureAudioCtx() {
         if (!audioCtx)
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -845,29 +941,247 @@
         playTone(220, 0.26, "sawtooth", 0.72);
       }
 
-      /* ====== Candidate generation (tables,squares,cubes,mixed) ====== */
+      /* ===== Trig data & helpers ===== */
+      let trigUnit = "deg"; // 'deg' | 'rad'
+
+      // Standard trig table with exact forms
+      const TRIG_ITEMS = [
+        { func: "sin", angleDeg: 0, rad: "0", display: "0", answers: ["0"] },
+        { func: "cos", angleDeg: 0, rad: "0", display: "1", answers: ["1"] },
+        { func: "tan", angleDeg: 0, rad: "0", display: "0", answers: ["0"] },
+        { func: "sec", angleDeg: 0, rad: "0", display: "1", answers: ["1"] },
+
+        {
+          func: "sin",
+          angleDeg: 30,
+          rad: "π/6",
+          display: "1/2",
+          answers: ["1/2"],
+        },
+        {
+          func: "cos",
+          angleDeg: 30,
+          rad: "π/6",
+          display: "√3/2",
+          answers: ["sqrt3/2", "√3/2", "root3/2"],
+        },
+        {
+          func: "tan",
+          angleDeg: 30,
+          rad: "π/6",
+          display: "1/√3",
+          answers: ["1/sqrt3", "1/√3", "1/root3", "sqrt3/3", "√3/3", "root3/3"],
+        },
+        {
+          func: "cosec",
+          angleDeg: 30,
+          rad: "π/6",
+          display: "2",
+          answers: ["2"],
+        },
+        {
+          func: "sec",
+          angleDeg: 30,
+          rad: "π/6",
+          display: "2/√3",
+          answers: ["2/sqrt3", "2/√3", "2/root3"],
+        },
+        {
+          func: "cot",
+          angleDeg: 30,
+          rad: "π/6",
+          display: "√3",
+          answers: ["sqrt3", "√3", "root3"],
+        },
+
+        {
+          func: "sin",
+          angleDeg: 45,
+          rad: "π/4",
+          display: "√2/2",
+          answers: ["sqrt2/2", "√2/2", "root2/2"],
+        },
+        {
+          func: "cos",
+          angleDeg: 45,
+          rad: "π/4",
+          display: "√2/2",
+          answers: ["sqrt2/2", "√2/2", "root2/2"],
+        },
+        { func: "tan", angleDeg: 45, rad: "π/4", display: "1", answers: ["1"] },
+        {
+          func: "cosec",
+          angleDeg: 45,
+          rad: "π/4",
+          display: "√2",
+          answers: ["sqrt2", "√2", "root2"],
+        },
+        {
+          func: "sec",
+          angleDeg: 45,
+          rad: "π/4",
+          display: "√2",
+          answers: ["sqrt2", "√2", "root2"],
+        },
+        { func: "cot", angleDeg: 45, rad: "π/4", display: "1", answers: ["1"] },
+
+        {
+          func: "sin",
+          angleDeg: 60,
+          rad: "π/3",
+          display: "√3/2",
+          answers: ["sqrt3/2", "√3/2", "root3/2"],
+        },
+        {
+          func: "cos",
+          angleDeg: 60,
+          rad: "π/3",
+          display: "1/2",
+          answers: ["1/2"],
+        },
+        {
+          func: "tan",
+          angleDeg: 60,
+          rad: "π/3",
+          display: "√3",
+          answers: ["sqrt3", "√3", "root3"],
+        },
+        {
+          func: "cosec",
+          angleDeg: 60,
+          rad: "π/3",
+          display: "2/√3",
+          answers: ["2/sqrt3", "2/√3", "2/root3"],
+        },
+        { func: "sec", angleDeg: 60, rad: "π/3", display: "2", answers: ["2"] },
+        {
+          func: "cot",
+          angleDeg: 60,
+          rad: "π/3",
+          display: "1/√3",
+          answers: ["1/sqrt3", "1/√3", "1/root3", "sqrt3/3", "√3/3", "root3/3"],
+        },
+
+        { func: "sin", angleDeg: 90, rad: "π/2", display: "1", answers: ["1"] },
+        { func: "cos", angleDeg: 90, rad: "π/2", display: "0", answers: ["0"] },
+        {
+          func: "cosec",
+          angleDeg: 90,
+          rad: "π/2",
+          display: "1",
+          answers: ["1"],
+        },
+        { func: "cot", angleDeg: 90, rad: "π/2", display: "0", answers: ["0"] },
+      ];
+
+      function normalizeTrigInput(str) {
+        let s = str.toLowerCase();
+        s = s.replace(/\s+/g, "");
+        s = s.replace(/√/g, "sqrt");
+        s = s.replace(/root/g, "sqrt");
+        return s;
+      }
+
+      function trigFormatAngle(item) {
+        return trigUnit === "deg" ? item.angleDeg + "°" : item.rad;
+      }
+
+      function trigPickQuestion() {
+        const idx = Math.floor(Math.random() * TRIG_ITEMS.length);
+        return TRIG_ITEMS[idx];
+      }
+
+      /* ===== Candidate generation (tables,squares,cubes,trig) ===== */
       function pickNextQuestion() {
+        if (currentMode === "trig") {
+          // trig pool only
+          const pool = [];
+          TRIG_ITEMS.forEach((item) => {
+            const key = `trig ${item.func} ${item.angleDeg}`;
+            if (!stats[key])
+              stats[key] = {
+                func: item.func,
+                angleDeg: item.angleDeg,
+                type: "trig",
+                attempts: 0,
+                correct: 0,
+                totalTime: 0,
+              };
+            ensureScheduledFields(key);
+            pool.push({
+              type: "trig",
+              func: item.func,
+              angleDeg: item.angleDeg,
+              rad: item.rad,
+              display: item.display,
+              answers: item.answers,
+              key,
+            });
+          });
+          const scored = pool.map((item) => ({
+            item,
+            weight: computePriorityForItem(item.key),
+          }));
+          // simple weighted choice + buckets
+          const struggling = [],
+            learning = [],
+            review = [];
+          scored.forEach((obj) => {
+            const s = stats[obj.item.key];
+            const acc = s.attempts ? s.correct / s.attempts : 0;
+            const attempts = s.attempts || 0;
+            if (attempts <= 1) learning.push(obj);
+            else if (acc < 0.7 || obj.weight > SCHED.baseNewPriority * 0.9)
+              struggling.push(obj);
+            else review.push(obj);
+          });
+          function pickFromBucket(bucket) {
+            if (!bucket.length) return null;
+            const total = bucket.reduce((sum, b) => sum + b.weight, 0);
+            let r = Math.random() * total;
+            for (const b of bucket) {
+              if (r < b.weight) return b.item;
+              r -= b.weight;
+            }
+            return bucket[bucket.length - 1].item;
+          }
+          const rand = Math.random();
+          let pick = null;
+          if (rand < 0.4 && struggling.length)
+            pick = pickFromBucket(struggling);
+          else if (rand < 0.7 && learning.length)
+            pick = pickFromBucket(learning);
+          else if (review.length) pick = pickFromBucket(review);
+          else
+            pick =
+              pickFromBucket(struggling) ||
+              pickFromBucket(learning) ||
+              pickFromBucket(review) ||
+              (scored.length ? scored[0].item : null);
+          return pick;
+        }
+
         const selectedTables = getSelectedTables();
         const selectedSquares = getSelectedSquares();
         const selectedCubes = getSelectedCubes();
 
-        if (currentMode === "tables" && selectedTables.length === 0) {
+        if (currentMode === "tables" && !selectedTables.length) {
           alert("Select at least one table");
           return null;
         }
-        if (currentMode === "squares" && selectedSquares.length === 0) {
+        if (currentMode === "squares" && !selectedSquares.length) {
           alert("Select at least one square");
           return null;
         }
-        if (currentMode === "cubes" && selectedCubes.length === 0) {
+        if (currentMode === "cubes" && !selectedCubes.length) {
           alert("Select at least one cube");
           return null;
         }
         if (
           currentMode === "mixed" &&
-          selectedTables.length === 0 &&
-          selectedSquares.length === 0 &&
-          selectedCubes.length === 0
+          !selectedTables.length &&
+          !selectedSquares.length &&
+          !selectedCubes.length
         ) {
           alert("Select at least one table, square or cube for Mixed mode");
           return null;
@@ -897,7 +1211,7 @@
             const key = `s ${n}`;
             if (!stats[key])
               stats[key] = {
-                n: n,
+                n,
                 attempts: 0,
                 correct: 0,
                 totalTime: 0,
@@ -912,7 +1226,7 @@
             const key = `c ${n}`;
             if (!stats[key])
               stats[key] = {
-                n: n,
+                n,
                 attempts: 0,
                 correct: 0,
                 totalTime: 0,
@@ -927,7 +1241,6 @@
           item,
           weight: computePriorityForItem(item.key),
         }));
-
         const struggling = [],
           learning = [],
           review = [];
@@ -935,14 +1248,13 @@
           const s = stats[obj.item.key];
           const acc = s.attempts ? s.correct / s.attempts : 0;
           const attempts = s.attempts || 0;
-          if (attempts === 0 || attempts <= 1) learning.push(obj);
+          if (attempts <= 1) learning.push(obj);
           else if (acc < 0.7 || obj.weight > SCHED.baseNewPriority * 0.9)
             struggling.push(obj);
           else review.push(obj);
         });
-
         function pickFromBucket(bucket) {
-          if (!bucket || bucket.length === 0) return null;
+          if (!bucket.length) return null;
           const total = bucket.reduce((sum, b) => sum + b.weight, 0);
           let r = Math.random() * total;
           for (const b of bucket) {
@@ -951,7 +1263,6 @@
           }
           return bucket[bucket.length - 1].item;
         }
-
         const rand = Math.random();
         let pick = null;
         if (rand < 0.4 && struggling.length) pick = pickFromBucket(struggling);
@@ -966,7 +1277,7 @@
         return pick;
       }
 
-      /* ====== Show + submit logic ====== */
+      /* ===== Show + submit logic ===== */
       function showNewQuestion() {
         isPaused = false;
         pausedElapsed = 0;
@@ -975,11 +1286,28 @@
         if (!q) return;
         currentQuestion = q;
         questionStartTime = performance.now();
+
         if (q.type === "table")
           questionDisplayEl.textContent = `${q.a} × ${q.b} = ?`;
         else if (q.type === "square")
           questionDisplayEl.textContent = `${q.n}² = ?`;
-        else questionDisplayEl.textContent = `${q.n}³ = ?`;
+        else if (q.type === "cube")
+          questionDisplayEl.textContent = `${q.n}³ = ?`;
+        else if (q.type === "trig") {
+          const fakeItem = TRIG_ITEMS.find(
+            (it) => it.func === q.func && it.angleDeg === q.angleDeg
+          );
+          const angleLabel = trigFormatAngle(fakeItem || q);
+          questionDisplayEl.textContent = `${q.func} ${angleLabel} = ?`;
+        }
+
+        // placeholder per mode
+        if (currentMode === "trig") {
+          answerInputEl.placeholder = "e.g. √3/2, 1/√3";
+        } else {
+          answerInputEl.placeholder = "Type answer & press Enter";
+        }
+
         feedbackEl.textContent = "";
         feedbackEl.className = "feedback";
         timingInfoEl.textContent = "";
@@ -997,18 +1325,91 @@
           showNewQuestion();
           return;
         }
+
         const raw = answerInputEl.value.trim();
+        const end = performance.now();
+        const elapsedBefore = pausedElapsed || 0;
+        const timeTaken = (end - questionStartTime) / 1000 + elapsedBefore;
+        questionStartTime = null;
+        pausedElapsed = 0;
+
+        // TRIG MODE:
+        if (currentQuestion.type === "trig") {
+          if (raw === "") {
+            feedbackEl.textContent = "Type a value like √3/2, 1/√3, √2/2 …";
+            feedbackEl.className = "feedback wrong";
+            return;
+          }
+          const normalized = normalizeTrigInput(raw);
+          const key = currentQuestion.key;
+          const fakeItem = TRIG_ITEMS.find(
+            (it) =>
+              it.func === currentQuestion.func &&
+              it.angleDeg === currentQuestion.angleDeg
+          );
+          const angleLabel = trigFormatAngle(fakeItem || currentQuestion);
+          const display = (fakeItem || currentQuestion).display;
+          const allowed = (fakeItem || currentQuestion).answers.map(
+            normalizeTrigInput
+          );
+
+          const isCorrect = allowed.includes(normalized);
+
+          if (!stats[key])
+            stats[key] = {
+              func: currentQuestion.func,
+              angleDeg: currentQuestion.angleDeg,
+              type: "trig",
+              attempts: 0,
+              correct: 0,
+              totalTime: 0,
+            };
+          const s = stats[key];
+          s.attempts += 1;
+          if (isCorrect) s.correct = (s.correct || 0) + 1;
+          s.totalTime = (s.totalTime || 0) + timeTaken;
+          s.lastTime = timeTaken;
+          s.lastCorrect = isCorrect;
+          s.history = s.history || [];
+          s.history.push({
+            timestamp: new Date().toISOString(),
+            userAnswer: raw,
+            correctAnswer: display,
+            time: timeTaken,
+          });
+
+          scheduleItemOnResult(key, isCorrect, timeTaken);
+          saveStats();
+          updateStatsDisplay();
+
+          if (isCorrect) {
+            feedbackEl.textContent = `Correct ✅  ${currentQuestion.func} ${angleLabel} = ${display}`;
+            feedbackEl.className = "feedback correct";
+            playCorrect();
+            questionCard.classList.add("flash-correct");
+            setTimeout(
+              () => questionCard.classList.remove("flash-correct"),
+              700
+            );
+          } else {
+            feedbackEl.textContent = `Wrong ❌  ${currentQuestion.func} ${angleLabel} = ${display}`;
+            feedbackEl.className = "feedback wrong";
+            playWrong();
+            questionCard.classList.add("flash-wrong");
+            setTimeout(() => questionCard.classList.remove("flash-wrong"), 700);
+          }
+          timingInfoEl.textContent = `Time: ${timeTaken.toFixed(2)} s`;
+          setTimeout(showNewQuestion, 700);
+          return;
+        }
+
+        // NUMERIC MODES:
         const userVal = parseInt(raw, 10);
         if (isNaN(userVal)) {
           feedbackEl.textContent = "Type your answer and press Enter.";
           feedbackEl.className = "feedback wrong";
           return;
         }
-        const end = performance.now();
-        const elapsedBefore = pausedElapsed || 0;
-        const timeTaken = (end - questionStartTime) / 1000 + elapsedBefore;
-        questionStartTime = null;
-        pausedElapsed = 0;
 
         let correctAnswer;
         if (currentQuestion.type === "table")
@@ -1018,7 +1419,6 @@
         else
           correctAnswer =
             currentQuestion.n * currentQuestion.n * currentQuestion.n;
-
         const key = currentQuestion.key;
         const isCorrect = userVal === correctAnswer;
 
@@ -1032,11 +1432,10 @@
             totalTime: 0,
             type: currentQuestion.type || "unknown",
           };
-
         const s = stats[key];
         s.attempts += 1;
-        if (isCorrect) s.correct += 1;
-        s.totalTime += timeTaken;
+        if (isCorrect) s.correct = (s.correct || 0) + 1;
+        s.totalTime = (s.totalTime || 0) + timeTaken;
         s.lastTime = timeTaken;
         s.lastCorrect = isCorrect;
         s.history = s.history || [];
@@ -1064,7 +1463,6 @@
           questionCard.classList.add("flash-wrong");
           setTimeout(() => questionCard.classList.remove("flash-wrong"), 700);
         }
-
         timingInfoEl.textContent = `Time: ${timeTaken.toFixed(2)} s`;
         setTimeout(showNewQuestion, 700);
       }
@@ -1139,14 +1537,11 @@
         ];
         all.forEach(([key, s]) => {
           const avg = s.attempts ? s.totalTime / s.attempts : 0;
-          const qText =
-            s.type === "table"
-              ? `${s.a}x${s.b}`
-              : s.type === "square"
-              ? `${s.n}^2`
-              : s.type === "cube"
-              ? `${s.n}^3`
-              : key;
+          let qText = key;
+          if (s.type === "table") qText = `${s.a}x${s.b}`;
+          else if (s.type === "square") qText = `${s.n}^2`;
+          else if (s.type === "cube") qText = `${s.n}^3`;
+          else if (s.type === "trig") qText = `${s.func}(${s.angleDeg})`;
           lines.push(
             [
               key,
@@ -1172,7 +1567,23 @@
         URL.revokeObjectURL(url);
       }
 
-      /* ====== Mode switching ====== */
+      function setTrigUnit(unit) {
+        trigUnit = unit;
+        trigDegBtn.classList.toggle("active", unit === "deg");
+        trigRadBtn.classList.toggle("active", unit === "rad");
+        saveCurrentSelections();
+        // update question text if currently trig
+        if (currentQuestion && currentQuestion.type === "trig") {
+          const fakeItem = TRIG_ITEMS.find(
+            (it) =>
+              it.func === currentQuestion.func &&
+              it.angleDeg === currentQuestion.angleDeg
+          );
+          const angleLabel = trigFormatAngle(fakeItem || currentQuestion);
+          questionDisplayEl.textContent = `${currentQuestion.func} ${angleLabel} = ?`;
+        }
+      }
+
       function setMode(mode) {
         currentMode = mode;
         document
@@ -1186,14 +1597,29 @@
           mode === "squares" || mode === "mixed" ? "block" : "none";
         cubesSection.style.display =
           mode === "cubes" || mode === "mixed" ? "block" : "none";
+
+        // trig UI bits
+        if (mode === "trig") {
+          trigUnitToggle.style.display = "flex";
+          trigToolbar.style.display = "flex";
+          trigToolbarText.style.display = "block";
+          answerInputEl.placeholder = "e.g. √3/2, 1/√3";
+        } else {
+          trigUnitToggle.style.display = "none";
+          trigToolbar.style.display = "none";
+          trigToolbarText.style.display = "none";
+          answerInputEl.placeholder = "Type answer & press Enter";
+        }
+
         saveCurrentSelections();
       }
       function restoreMode() {
         const s = loadSettings();
+        trigUnit = s.trigUnit || "deg";
+        setTrigUnit(trigUnit);
         setMode(s.mode || "tables");
       }
 
-      /* ====== Wiring & helpers ====== */
       function wireEvents() {
         nextBtn.addEventListener("click", showNewQuestion);
         pauseBtn.addEventListener("click", pauseOrResume);
@@ -1203,10 +1629,13 @@
         answerInputEl.addEventListener("keydown", (e) => {
           if (e.key === "Enter") submitAnswer();
         });
+
         modeTablesBtn.addEventListener("click", () => setMode("tables"));
         modeSquaresBtn.addEventListener("click", () => setMode("squares"));
         modeCubesBtn.addEventListener("click", () => setMode("cubes"));
         modeMixedBtn.addEventListener("click", () => setMode("mixed"));
+        modeTrigBtn.addEventListener("click", () => setMode("trig"));
+
         selectAllTablesBtn.addEventListener("click", () => {
           const btns = tablesSelectEl.querySelectorAll("button");
           const anyUnchecked = Array.from(btns).some(
@@ -1228,6 +1657,25 @@
           );
           selectAllCubes(anyUnchecked);
         });
+
+        // trig toolbar insert buttons
+        trigToolbar.querySelectorAll(".trig-toolbar-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const val = btn.dataset.insert || "";
+            const el = answerInputEl;
+            const start = el.selectionStart ?? el.value.length;
+            const end = el.selectionEnd ?? el.value.length;
+            const before = el.value.slice(0, start);
+            const after = el.value.slice(end);
+            el.value = before + val + after;
+            const newPos = start + val.length;
+            el.selectionStart = el.selectionEnd = newPos;
+            el.focus();
+          });
+        });
+
+        trigDegBtn.addEventListener("click", () => setTrigUnit("deg"));
+        trigRadBtn.addEventListener("click", () => setTrigUnit("rad"));
       }
 
       function init() {
